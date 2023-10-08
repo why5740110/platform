@@ -1,0 +1,21 @@
+{
+    "name": "nisiya/baseapisdk",
+    "description": "王氏基础数据接口sdk",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "nisiya\\baseapisdk\\": ""
+        }
+    },
+    "authors": [
+        {
+            "name": "niewei",
+            "email": "niewei@yuanxinjituan.com"
+        },
+        {
+            "name": "guowenzheng",
+            "email": "guowenzheng@yuanxinjituan.com"
+        }
+    ]
+}

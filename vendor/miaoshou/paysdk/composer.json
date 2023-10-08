@@ -1,0 +1,16 @@
+{
+  "name": "nisiya/paysdk",
+  "description": "paysdk",
+  "authors": [
+    {
+      "name": "MallTeam",
+      "email": "mallteam@yuanxin-inc.com"
+    }
+  ],
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "nisiya\\paysdk\\": ""
+    }
+  }
+}

@@ -1,0 +1,502 @@
+<?php
+
+namespace mobile\controllers;
+
+use common\libs\CommonFunc;
+use common\models\Department;
+use common\models\DiseaseEsModel;
+use common\models\DoctorEsModel;
+use common\sdks\snisiya\SnisiyaSdk;
+use mobile\widget\WechatShareWidget;
+use Yii;
+use \yii\helpers\ArrayHelper;
+use \common\helpers\Url;
+use yii\data\Pagination;
+
+class DoctorlistController extends CommonController
+{
+    public $pagesize = 20;
+    public $maxPage = 20;
+    public $titlelist;
+
+    public function init()
+    {
+        $this->titlelist = CommonFunc::$title_list;
+        parent::init();
+    }
+
+    /**
+     * 医生列表首页
+     * @author liushaokai<liushakai@yuanxin-inc.com>
+     * @date 2020/8/11
+     */
+    public function actionIndex()
+    {
+        $request = Yii::$app->request;
+        $region = $request->get('region');
+        $sanjia = $request->get('sanjia', 0);
+        $keshi_id = $request->get('keshi_id', 0);
+        $page = $request->get('page', 1);
+
+        //默认取通用定位
+        //存储地区
+        if($region){
+            CommonFunc::auto_dingwei($region);
+        }else{
+            if($region==='0'){
+                CommonFunc::city_cookie();
+            }else{
+                $selectArr = CommonFunc::get_city_cookie();
+                if(ArrayHelper::getValue($selectArr,'pinyin')){
+                    $region = ArrayHelper::getValue($selectArr,'pinyin');
+                }
+            }
+
+        }
+        $data = [];
+        $regionData = $this->getRegionData($region);
+        $province_list =  SnisiyaSdk::getInstance()->getDistrict();
+        $city_list = $regionData['city_list'] ?? [];
+        $province = $regionData['province'] ?? [];
+        $city = $regionData['city'] ?? [];
+
+        $skeshi_list = [];
+        $fkeshi_info = [];
+        $skeshi_info = [];
+        $fkeshi_list = SnisiyaSdk::getInstance()->department();
+        if ($keshi_id) {
+            $keshi_item = CommonFunc::getKeshiInfo($keshi_id);
+            if ($keshi_item && $keshi_item['parent_id'] == 0) {
+                $fkeshi_info = [
+                    'department_id' => $keshi_item['department_id'],
+                    'department_name' => $keshi_item['department_name'],
+                ];
+                $skeshi_list = $keshi_item['second_arr'] ?? [];
+            }
+
+            if ($keshi_item && $keshi_item['parent_id'] > 0) {
+                $parent_item = CommonFunc::getKeshiInfo($keshi_item['parent_id']);
+                $fkeshi_info = [
+                    'department_id' => $parent_item['department_id'],
+                    'department_name' => $parent_item['department_name'],
+                ];
+                $skeshi_list = $parent_item['second_arr'] ?? [];
+                $skeshi_info = $keshi_item;
+            }
+
+        }
+
+        $docData = $this->getDoctorlist('keshi', $region, $sanjia, $keshi_id, $page);
+        $doctorlist = $docData['doctorlist'] ?? [];
+        $totalCount = $docData['totalCount'] ?? 0;
+        $data['titlelist'] = $this->titlelist;
+        $data['region'] = $region;
+        $data['province'] = $province;
+        $data['city'] = $city;
+        $data['sanjia'] = $sanjia;
+        $data['province_list'] = $province_list;
+        $data['city_list'] = $city_list;
+        $data['fkeshi_list'] = $fkeshi_list;
+        $data['skeshi_list'] = $skeshi_list;
+        $data['fkeshi_info'] = $fkeshi_info;
+        $data['skeshi_info'] = $skeshi_info;
+        $data['keshi_id'] = $keshi_id;
+        $data['doctorlist'] = $doctorlist;
+        $data['page'] = $page;
+        $data['totalCount'] = $totalCount;
+        $data['pagination'] = new Pagination([
+            'totalCount' => $totalCount,
+            'defaultPageSize' => $this->pagesize,
+        ]);
+        $data['ua'] = $this->getUserAgent();
+
+        $seoTitle = "全国哪家医院最好_全国医院排名_王氏医生";
+        $seoKeywords = "全国医院医生在线咨询,全国专家在线咨询,全国医生网上预约挂号,全国医生排行榜";
+        $seoDescription = "王氏医生为您提供全国医院医生大全，医生排名榜、预约挂号、专家挂号等，百万患者真实评价打造实力排名，助您轻轻松松看医生，在线预约电话咨询，找到合适的医生专家。";
+        $dengji_name = '';
+        $region_name = '全国';
+        if ($province && $city) {
+            $region_name = $city['name'] ?? '';
+        } elseif ($province) {
+            $region_name = $province['name'] ?? '';
+        }
+        if ($sanjia) {
+            $dengji_name = $this->titlelist[$sanjia] ?? '';
+        }
+        if ($region_name || $dengji_name) {
+            $seoTitle = "{$region_name}医院专家_{$dengji_name}医生在线咨询_预约挂号_哪个好_{$region_name}专家排名_王氏医生";
+            $seoKeywords = "{$region_name}医院{$dengji_name}医生在线咨询,{$region_name}专家在线咨询,{$region_name}{$dengji_name}医生网上预约挂号,{$region_name}{$dengji_name}医生排行榜";
+            $seoDescription = "王氏医生为您提供{$region_name}医院{$dengji_name}医生大全，{$dengji_name}医生排名榜、预约挂号、专家挂号等，百万患者真实评价打造实力排名，助您轻轻松松看{$dengji_name}医生，在线预约电话咨询，找到合适的{$dengji_name}医生专家。";
+
+        }
+        if($this->getUserAgent() == 'patient')
+        {
+            $seoTitle  = '按医生';
+        }
+        $this->seoTitle = $seoTitle;
+        $this->seoKeywords = $seoKeywords;
+        $this->seoDescription = $seoDescription;
+
+        $shareData = [];
+        $shareData['title'] = $this->seoTitle;
+        $shareData['link'] = rtrim(ArrayHelper::getValue(\Yii::$app->params, 'domains.mobile'), '/') . Url::to(['doctorlist/index', 'region' => $region, 'sanjia' => $sanjia, 'keshi_id' => $keshi_id, 'page' => 1]);
+        $shareData['desc'] = $this->seoDescription;
+        $shareData['imgUrl'] = 'https://www.nisiyacdn.com/static/images/logo/logo-100x100.png';
+        $data['shareData'] = $shareData;
+
+        //埋点数据处理
+        $eventParam = [
+            'page_title' => '医生列表',
+            'page' => '医生列表',
+        ];
+        \common\widgets\MiaoStatisticsWidget::widget([
+            'register_event' => $this->formatEvent($eventParam),
+        ]);
+
+
+        WechatShareWidget::widget([
+            'title' => $shareData['title'],
+            'link' => $shareData['link'],
+            'imgUrl' => $shareData['imgUrl'],
+            'description' => $shareData['desc'],
+        ]);
+
+        return $this->render('index', $data);
+    }
+
+    /**
+     * 科室搜索医生
+     * @author liushaokai<liushakai@yuanxin-inc.com>
+     * @date 2020/8/11
+     */
+    public function actionDepartment()
+    {
+        $request = Yii::$app->request;
+        $region = $request->get('region', 0);
+        $keshi_id = $request->get('keshi_id', 0);
+        $sanjia = $request->get('sanjia', 0);
+        $page = $request->get('page', 1);
+
+        $data = [];
+        $regionData = $this->getRegionData();
+        $province_list = $regionData['province_list'] ?? [];
+        $city_list = $regionData['city_list'] ?? [];
+        $province = $regionData['province'] ?? [];
+        $city = $regionData['city'] ?? [];
+
+        $skeshi_list = [];
+        $fkeshi_info = [];
+        $skeshi_info = [];
+        $fkeshi_list = SnisiyaSdk::getInstance()->department();
+        if ($keshi_id) {
+            $keshi_item = CommonFunc::getKeshiInfo($keshi_id);
+            if ($keshi_item && $keshi_item['parent_id'] == 0) {
+                $fkeshi_info = [
+                    'department_id' => $keshi_item['department_id'],
+                    'department_name' => $keshi_item['department_name'],
+                ];
+                $skeshi_list = $keshi_item['second_arr'] ?? [];
+            }
+
+            if ($keshi_item && $keshi_item['parent_id'] > 0) {
+                $parent_item = CommonFunc::getKeshiInfo($keshi_item['parent_id']);
+                $fkeshi_info = [
+                    'department_id' => $parent_item['department_id'],
+                    'department_name' => $parent_item['department_name'],
+                ];
+                $skeshi_list = $parent_item['second_arr'] ?? [];
+                $skeshi_info = $keshi_item;
+            }
+
+        }
+
+        $docData = $this->getDoctorlist('keshi', $region, $sanjia, $keshi_id, $page);
+        $doctorlist = $docData['doctorlist'] ?? [];
+        $totalCount = $docData['totalCount'] ?? 0;
+
+        $data['province'] = $province;
+        $data['titlelist'] = $this->titlelist;
+        $data['region'] = $region;
+        $data['city'] = $city;
+        $data['sanjia'] = $sanjia;
+        $data['province_list'] = SnisiyaSdk::getInstance()->getDistrict();
+        $data['city_list'] = $city_list;
+        $data['fkeshi_list'] = $fkeshi_list;
+        $data['skeshi_list'] = $skeshi_list;
+        $data['fkeshi_info'] = $fkeshi_info;
+        $data['skeshi_info'] = $skeshi_info;
+        $data['keshi_id'] = $keshi_id;
+        $data['doctorlist'] = $doctorlist;
+        $data['page'] = $page;
+        $data['totalCount'] = $totalCount;
+        $data['pagination'] = new Pagination([
+            'totalCount' => $totalCount,
+            'defaultPageSize' => $this->pagesize,
+        ]);
+
+        $seoTitle = "全国哪家医院最好_全国医院排名_王氏医生";
+        $seoKeywords = "全国医院医生在线咨询,全国专家在线咨询,全国医生网上预约挂号,全国医生排行榜";
+        $seoDescription = "王氏医生为您提供全国医院医生大全，医生排名榜、预约挂号、专家挂号等，百万患者真实评价打造实力排名，助您轻轻松松看医生，在线预约电话咨询，找到合适的医生专家。";
+        $dengji_name = '';
+        $region_name = '全国';
+        $keshi_name = '';
+        if ($province && $city) {
+            $region_name = $city['name'] ?? '';
+        } elseif ($province) {
+            $region_name = $province['name'] ?? '';
+        }
+        if ($sanjia) {
+            $dengji_name = $this->levellist[$sanjia] ?? '';
+        }
+        if ($fkeshi_info && $skeshi_info) {
+            $keshi_name = $skeshi_info['department_name'] ?? '';
+        } elseif ($fkeshi_info) {
+            $keshi_name = $fkeshi_info['department_name'] ?? '';
+        }
+        if ($region_name || $dengji_name || $keshi_name) {
+            $seoTitle = "{$region_name}{$keshi_name}医院专家_{$dengji_name}医生在线咨询_预约挂号_哪个好_{$region_name}{$keshi_name}专家排名_王氏医生";
+            $seoKeywords = "{$region_name}{$keshi_name}医院{$dengji_name}医生在线咨询,{$region_name}{$keshi_name}专家在线咨询,{$region_name}{$keshi_name}{$dengji_name}医生网上预约挂号,{$region_name}{$dengji_name}医生排行榜";
+            $seoDescription = "王氏医生为您提供{$region_name}{$keshi_name}医院{$dengji_name}医生大全，{$dengji_name}医生排名榜、预约挂号、专家挂号等，百万患者真实评价打造实力排名，助您轻轻松松看{$dengji_name}医生，在线预约电话咨询，找到合适的{$dengji_name}医生专家。";
+
+        }
+        $this->seoTitle = $seoTitle;
+        $this->seoKeywords = $seoKeywords;
+        $this->seoDescription = $seoDescription;
+        return $this->render('department', $data);
+    }
+
+    /**
+     * 疾病搜索医生
+     * @author liushaokai<liushakai@yuanxin-inc.com>
+     * @date 2020/8/11
+     */
+    public function actionDiseases()
+    {
+        $request = Yii::$app->request;
+        $region = $request->get('region', 0);
+        $diseases = $request->get('diseases', 0);
+        $dspinyin = $request->get('dspinyin', 0);
+        $sanjia = $request->get('sanjia', 0);
+        $page = $request->get('page', 1);
+
+        $data = [];
+        //疾病列表选择
+        $dis = DiseaseEsModel::find('disease_name,pinyin,initial')->offset(0)->limit(500)->asArray()->all();
+        array_multisort(array_column($dis,'initial'),SORT_ASC,$dis);
+
+        foreach($dis as $k=>$v){
+            $v['initial'] = strtoupper($v['initial']);
+            $iniarr[$v['initial']][] = $v;  //根据initial 进行数组重新赋值
+        }
+
+        $regionData = $this->getRegionData();
+        $province_list = $regionData['province_list'] ?? [];
+        $city_list = $regionData['city_list'] ?? [];
+        $province = $regionData['province'] ?? [];
+        $city = $regionData['city'] ?? [];
+
+        if ($dspinyin) {
+            $disease_id = 0;
+            $diseaseInfo = DiseaseEsModel::find()->where(['pinyin' => $dspinyin])->one();
+            if ($diseaseInfo) {
+                $disease_id = $diseaseInfo['disease_id'];
+                $docData = $this->getDoctorlist('dspinyin', $region, $sanjia, $disease_id, $page);
+            }
+
+        } else {
+            $docData = $this->getDoctorlist('diseases', $region, $sanjia, $diseases, $page);
+        }
+
+        $doctorlist = $docData['doctorlist'] ?? [];
+        $totalCount = $docData['totalCount'] ?? 0;
+
+        $data['titlelist'] = $this->titlelist;
+        $data['iniarr'] = $iniarr;
+        $data['province'] = $province;
+        $data['region'] = $region;
+        $data['city'] = $city;
+        $data['sanjia'] = $sanjia;
+        $data['province_list'] = SnisiyaSdk::getInstance()->getDistrict();
+        $data['city_list'] = $city_list;
+        $data['diseases'] = $diseases;
+        $data['doctorlist'] = $doctorlist;
+        $data['search_disease_name'] = $diseaseInfo['disease_name'] ?? '';
+        $data['dspinyin'] = $dspinyin;
+        $data['page'] = $page;
+        $data['totalCount'] = $totalCount;
+        $data['pagination'] = new Pagination([
+            'totalCount' => $totalCount,
+            'defaultPageSize' => $this->pagesize,
+        ]);
+        $seoTitle = "全国哪家医院最好_全国医院排名_王氏医生";
+        $seoKeywords = "全国医院医生在线咨询,全国专家在线咨询,全国医生网上预约挂号,全国医生排行榜";
+        $seoDescription = "王氏医生为您提供全国医院医生大全，医生排名榜、预约挂号、专家挂号等，百万患者真实评价打造实力排名，助您轻轻松松看医生，在线预约电话咨询，找到合适的医生专家。";
+        $dengji_name = '';
+        $region_name = '全国';
+        $disease_name = $data['search_disease_name'] ?? '';
+        if ($province && $city) {
+            $region_name = $city['name'] ?? '';
+        } elseif ($province) {
+            $region_name = $province['name'] ?? '';
+        }
+        if ($sanjia) {
+            $dengji_name = $this->levellist[$sanjia] ?? '';
+        }
+        if ($region_name || $dengji_name) {
+            $seoTitle = "{$region_name}医院专家_{$dengji_name}医生在线咨询_预约挂号_哪个好_{$region_name}专家排名_王氏医生";
+            $seoKeywords = "{$region_name}医院{$dengji_name}医生在线咨询,{$region_name}专家在线咨询,{$region_name}{$dengji_name}医生网上预约挂号,{$region_name}{$dengji_name}医生排行榜";
+            $seoDescription = "王氏医生为您提供{$region_name}医院{$dengji_name}医生大全，{$dengji_name}医生排名榜、预约挂号、专家挂号等，百万患者真实评价打造实力排名，助您轻轻松松看{$dengji_name}医生，在线预约电话咨询，找到合适的{$dengji_name}医生专家。";
+        }
+        if ($disease_name) {
+            $seoTitle = "{$region_name}{$disease_name}医院专家_{$dengji_name}医生在线咨询_预约挂号_哪个好_{$region_name}{$disease_name}专家排名_王氏医生";
+            $seoKeywords = "{$region_name}治疗{$disease_name}医院最好的专家,{$region_name}治疗{$disease_name}专家排行榜,{$region_name}{$disease_name}专家网上预约挂号";
+            $seoDescription = "王氏医生为您提供{$region_name}{$disease_name}医院{$dengji_name}医生排名榜，{$dengji_name}医生大全、预约挂号、专家挂号、专家门诊，百万患者真实评价打造实力排名，助您在第一时间知道{$region_name}{$disease_name}看什么{$dengji_name}医生，预约在线咨询，找{$dengji_name}医生挂号。";
+        }
+        $this->seoTitle = $seoTitle;
+        $this->seoKeywords = $seoKeywords;
+        $this->seoDescription = $seoDescription;
+        return $this->render('diseases', $data);
+    }
+
+    /**
+     * 科室联动
+     * @author liushaokai<liushakai@yuanxin-inc.com>
+     * @date 2020/8/11
+     */
+    public function actionAjaxGetKeshi()
+    {
+        $request = Yii::$app->request;
+        $keshi_id = $request->get('keshi_id', 0);
+        $region = $request->get('region', 0);
+        $sanjia = $request->get('sanjia', 0);
+
+        $skeshi_list = [];
+        if ($keshi_id) {
+            $keshi_item = CommonFunc::getKeshiInfo($keshi_id);
+            if ($keshi_item && $keshi_item['parent_id'] == 0) {
+                $fkeshi_info = [
+                    'department_id' => $keshi_item['department_id'],
+                    'department_name' => $keshi_item['department_name'],
+                ];
+                $skeshi_list = $keshi_item['second_arr'] ?? [];
+            }
+
+            if ($keshi_item && $keshi_item['parent_id'] > 0) {
+                $parent_item = CommonFunc::getKeshiInfo($keshi_item['parent_id']);
+                $fkeshi_info = [
+                    'department_id' => $parent_item['department_id'],
+                    'department_name' => $parent_item['department_name'],
+                ];
+                $skeshi_list = $parent_item['second_arr'] ?? [];
+                $skeshi_info = $keshi_item;
+            }
+
+
+            if ($skeshi_list) {
+                $urll = Url::to(['doctorlist/index', 'region' => $region, 'sanjia' => $sanjia, 'keshi_id' => $keshi_id, 'page' => 1]);
+                $str = '';
+                $str .= '<li ><a href="' . $urll . '">不限</a></li>';
+
+                foreach ($skeshi_list as $item) {
+                    $urll = Url::to(['doctorlist/index', 'region' => $region, 'sanjia' => $sanjia, 'keshi_id' => $item['department_id'], 'page' => 1]);
+                    if (isset($keshi_id) && $keshi_id == $item['department_id']) {
+                        $clas = 'class="dep_active"';
+                    } else {
+                        $clas = '';
+                    }
+                    $str .= '<li ><a ' . $clas . ' href="' . $urll . '">' . $item['department_name'] . '</a></li>';
+                }
+                return $this->asJson(['data' => $str]);
+            }else{
+                $strr='<li ><a href="' . Url::to(['doctorlist/index', 'region' => $region, 'sanjia' => $sanjia, 'keshi_id' => $keshi_id, 'page' => 1]) . '">'.$fkeshi_info['department_name'].'</a></li>';
+                return $this->asJson(['data' => $strr]);
+            }
+        }else{
+            $urll = Url::to(['doctorlist/index', 'region' => $region, 'sanjia' => $sanjia, 'keshi_id' => $keshi_id, 'page' => 1]);
+            $str = '';
+            $str .= '<li ><a href="' . $urll . '">不限</a></li>';
+            return $this->asJson(['data' => $str]);
+        }
+    }
+
+    public function getRegionData($region = 0)
+    {
+        $request = Yii::$app->request;
+        if (empty($region)) {
+            $region = $request->get('region', 0);
+        }
+        $data = [];
+        // $province_list = Department::district();
+        $province_list = SnisiyaSdk::getInstance()->getDistrict();
+        $city_list = [];
+        $province = [];
+        $city = [];
+        if ($region) {
+            $regioninfo = SnisiyaSdk::getInstance()->getRegionInfo(['region' => $region]);
+            if ($regioninfo && $regioninfo['c_id'] == 0) {
+                $province = $province_list[$regioninfo['p_id']];
+                $city_list = $province['city_arr'] ?? [];
+            }
+            if ($regioninfo && $regioninfo['c_id'] > 0) {
+                $province = $province_list[$regioninfo['p_id']];
+                $city_list = $province['city_arr'] ?? [];
+                if ($city_list) {
+                    foreach ($city_list as $key => $value) {
+                        if ($value['id'] == $regioninfo['c_id']) {
+                            $city = $value;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return [
+            'province_list' => $province_list,
+            'city_list' => $city_list,
+            'province' => $province,
+            'city' => $city,
+        ];
+
+    }
+
+    /**
+     * 搜索医生
+     * @author liushaokai<liushakai@yuanxin-inc.com>
+     * @date 2020/8/11
+     */
+    public function getDoctorlist($type = '', $region_pinyin = '', $sanjia = 0, $relation_id = '', $page = 1)
+    {
+        $params = [];
+        $params['type'] = $type;
+        $params['region_pinyin'] = $region_pinyin;
+        $params['relation_id'] = $relation_id;
+        $params['page'] = $page;
+        $params['pagesize'] = $this->pagesize;
+        if ($sanjia) {
+            $params['doctor_title_id'] = $sanjia;
+        }
+        if ($relation_id) {
+            if ($type == 'keshi') {
+                $keshi_item = CommonFunc::getKeshiInfo($relation_id);
+                if ($keshi_item && $keshi_item['parent_id'] == 0) {
+                    $params['fkid'] = $relation_id;
+                } else {
+                    $params['skid'] = $relation_id;
+                }
+            } elseif ($type == 'diseases') {
+                $params['initial'] = $relation_id;
+            } elseif ($type == 'dspinyin') {
+                $params['disease_id'] = $relation_id;
+            }
+        }
+        $snisiyaSdk = new SnisiyaSdk();
+        $res = $snisiyaSdk->getDoctorList($params);
+        $doctorlist = $res['doctor_list'] ?? [];
+        $totalCount = $res['totalCount'] ?? 0;
+        return [
+            'doctorlist' => $doctorlist,
+            'totalCount' => $totalCount,
+        ];
+    }
+
+}

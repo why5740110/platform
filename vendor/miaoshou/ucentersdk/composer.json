@@ -1,0 +1,16 @@
+{
+  "name": "nisiya/ucentersdk",
+  "description": "usersdk",
+  "authors": [
+    {
+      "name": "usersdk",
+      "email": "usersdk@yuanxin-inc.com"
+    }
+  ],
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "nisiya\\ucentersdk\\": ""
+    }
+  }
+}

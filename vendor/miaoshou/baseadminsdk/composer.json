@@ -1,0 +1,19 @@
+{
+  "name": "nisiya/baseadminsdk",
+  "description": "新版基础数据后台子系统登录登出sdk",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "nisiya\\baseadminsdk\\": ""
+    }
+  },
+  "authors": [
+    {
+      "name": "dengyaya",
+      "email": "dengyaya@yuanxinjituan.com"
+    }
+  ],
+  "require": {
+  }
+}

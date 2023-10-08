@@ -1,0 +1,197 @@
+.icon-blank{
+	background:url('icons/blank.gif') no-repeat;
+}
+.icon-add{
+	background:url('icons/edit_add.png') no-repeat;
+}
+.icon-edit{
+	background:url('icons/pencil.png') no-repeat;
+}
+.icon-remove{
+	background:url('icons/edit_remove.png') no-repeat;
+}
+.icon-save{
+	background:url('icons/filesave.png') no-repeat;
+}
+.icon-cut{
+	background:url('icons/cut.png') no-repeat;
+}
+.icon-ok{
+	background:url('icons/ok.png') no-repeat;
+}
+.icon-no{
+	background:url('icons/no.png') no-repeat;
+}
+.icon-cancel{
+	background:url('icons/cancel.png') no-repeat;
+}
+.icon-close{
+	background:url('icons/cancel.png') no-repeat;
+}
+.icon-reload{
+	background:url('icons/reload.png') no-repeat;
+}
+.icon-search{
+	background:url('icons/search.png') no-repeat;
+}
+.icon-print{
+	background:url('icons/print.png') no-repeat;
+}
+.icon-help{
+	background:url('icons/help.png') no-repeat;
+}
+.icon-undo{
+	background:url('icons/undo.png') no-repeat;
+}
+.icon-redo{
+	background:url('icons/redo.png') no-repeat;
+}
+.icon-back{
+	background:url('icons/back.png') no-repeat;
+}
+.icon-sum{
+	background:url('icons/sum.png') no-repeat;
+}
+.icon-set-pass{
+	background:url('icons/key.png') no-repeat;
+}
+.icon-login{
+	background:url('icons/login.png') no-repeat;
+}
+.icon-hand{
+	background:url('icons/hand.png') no-repeat;
+}
+.icon-onsale{
+	background:url('icons/up-sale.png') no-repeat;
+}
+.icon-offsale{
+	background:url('icons/off-sale.png') no-repeat;
+}
+.icon-compare{
+	background:url('icons/compare.png') no-repeat;
+}
+.icon-wheel{
+	background:url('icons/wheel.png') no-repeat;
+}
+.icon-submit{
+	background:url('icons/submit.png') no-repeat;
+}
+.icon-exportExcel{
+	background:url('icons/export_excel.png') no-repeat;
+}
+.icon-orderDivide{
+	background:url('icons/orderdivide.png') no-repeat;
+}
+.icon-orderUnLock{
+	background:url('icons/orderunlock.png') no-repeat;
+}
+.icon-skuUnLock{
+	background:url('icons/skuunlock.png') no-repeat;
+}
+.icon-auditPass{
+	background:url('icons/auditpass.png') no-repeat;
+}
+.icon-ordercancel{
+	background:url('icons/order-cancel.png') no-repeat;
+}
+.icon-singleUp{
+	background:url('icons/single-up.png') no-repeat;
+}
+.icon-singleDown{
+	background:url('icons/single-down.png') no-repeat;
+}
+.icon-batchUp{
+	background:url('icons/batch-up.png') no-repeat;
+}
+.icon-batchDown{
+	background:url('icons/batch-down.png') no-repeat;
+}
+
+.icon-billPass{
+	background:url('icons/billpass.png') no-repeat;
+}
+.icon-enter{
+	background:url('icons/enter.png') no-repeat;
+}
+.icon-reply{
+	background:url('icons/reply.png') no-repeat;
+}
+.icon-orderprocess{
+	background:url('icons/orderprocess.png') no-repeat;	
+}
+.icon-stockCheck{
+	background:url('icons/stockcheck.png') no-repeat;	
+}
+.icon-neworder{
+	background:url('icons/new-order.png') no-repeat;	
+}
+.icon-pointshare{
+	background:url('icons/goods-price.png') no-repeat;	
+}
+.icon-cuscover-bus{
+	background:url('icons/cuscover-bus.png') no-repeat;	
+}
+.icon-verify{
+	background:url('icons/get-verify.png') no-repeat;
+}
+.icon-potent{
+	background:url('icons/potent.gif') no-repeat;
+}
+
+.icon-offline{
+	background:url('icons/offline.png') no-repeat;
+}
+.icon-refresh{
+	background:url('icons/refresh.png') no-repeat;
+}
+.icon-publish{
+	background:url('icons/publish.png') no-repeat;
+}
+.icon-delivery{
+	background:url('icons/delivery.png') no-repeat;
+}
+.icon-promotionstart{
+	background:url('icons/promotion-start.png') no-repeat;
+}
+.icon-visitback{
+	background:url('icons/visit-back.png') no-repeat;
+}
+.icon-payment-type{
+	background:url('icons/payment-type.png') no-repeat;
+}
+.icon-rececive{
+	background:url('icons/rececive.png') no-repeat;
+}
+.icon-deliveryview{
+	background:url('icons/delivery-view.png') no-repeat;
+}
+.icon-promotionstop{
+	background:url('icons/promotion-stop.png') no-repeat;
+}
+.icon-orderaudit{
+	background:url('icons/order-audit.png') no-repeat;
+}
+.icon-skuchoose{
+	background:url('icons/sku-choose.png') no-repeat;
+}
+.icon-giftchoose{
+	background:url('icons/gift-choose.png') no-repeat;
+}
+.icon-offlineinput{
+	background:url('icons/offline-input.png') no-repeat;
+}
+.icon-play{
+	background:url('icons/play.png') no-repeat;
+}
+.icon-download{
+	background:url('icons/download.png') no-repeat;
+}
+.icon-send{
+	background:url('icons/sms-send.png') no-repeat;
+}
+.icon-sms{
+	background:url('icons/sms-subscrip-group.png') no-repeat;
+}
+.icon-email{
+	background:url('icons/sms-template.png') no-repeat;
+}

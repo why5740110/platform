@@ -1,0 +1,16 @@
+{
+  "name": "nisiya/mallsdk",
+  "description": "mallsdk",
+  "authors": [
+    {
+      "name": "MallTeam",
+      "email": "mallteam@yuanxin-inc.com"
+    }
+  ],
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "nisiya\\mallsdk\\": ""
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "nisiya/branddoctorsdk",
+  "description": "branddoctorsdk",
+  "authors": [
+    {
+      "name": "doctorTeam",
+      "email": "doctorTeam@yuanxin-inc.com"
+    }
+  ],
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "nisiya\\branddoctorsdk\\": ""
+    }
+  }
+}
